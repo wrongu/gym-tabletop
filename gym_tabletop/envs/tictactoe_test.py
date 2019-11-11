@@ -38,20 +38,23 @@ class TestTicTacToe(unittest.TestCase):
         self.env.board[:] = [[1, -1, -1], [0, 1, 1], [-1, 1, -1]]
         self.assertEqual(self.env._evaluate_game_state(), GameStatus.ACTIVE)
 
-    def test_is_terminal(self):
-        self.assertFalse(self.env.is_terminal())
+    def test_are_players_done(self):
+        self.assertEqual(self.env.are_players_done(), [False, False])
 
         self.env.game_status = GameStatus.DRAW
-        self.assertTrue(self.env.is_terminal())
+        self.assertEqual(self.env.are_players_done(), [True, True])
 
         self.env.game_status = GameStatus.WON
-        self.assertTrue(self.env.is_terminal())
+        self.assertEqual(self.env.are_players_done(), [True, True])
 
-    def test_get_reward(self):
-        self.assertEqual(self.env.get_reward(), 0)
+    def test_get_player_rewards(self):
+        self.assertEqual(self.env.get_player_rewards(), [0, 0])
 
         self.env.game_status = GameStatus.DRAW
-        self.assertEqual(self.env.get_reward(), 0)
+        self.assertEqual(self.env.get_player_rewards(), [0, 0])
 
         self.env.game_status = GameStatus.WON
-        self.assertEqual(self.env.get_reward(), 1)
+        self.assertEqual(self.env.get_player_rewards(), [1, -1])
+
+        self.env.current_player = 2
+        self.assertEqual(self.env.get_player_rewards(), [-1, 1])

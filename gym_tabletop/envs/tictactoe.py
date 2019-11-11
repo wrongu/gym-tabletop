@@ -1,3 +1,5 @@
+from typing import List
+
 import gym
 from gym import spaces
 import numpy as np
@@ -18,25 +20,29 @@ class TicTacToeEnv(gym.Env):
         self.observation_space = spaces.Box(-1, 1, shape=(3, 3), dtype=np.int)
 
     def step(self, action):
-        self.board[action] = self.current_player
+        game_symbols = [0, 1, -1]
+        self.board[action] = game_symbols[self.current_player]
         self.game_status = self._evaluate_game_state()
+        done = self.are_players_done()
+        reward = self.get_player_rewards()
+        obs = self.get_player_observations()
+
         if self.current_player == 1:
             self.current_player = 2
         else:
             self.current_player = 1
 
-        done = self.is_terminal()
-        reward = self.get_reward()
-
-        return self.board, reward, done, {}
+        return obs, reward, done, {}
 
     def reset(self):
-        self.board = np.zeros((3, 3))
+        self.board = np.zeros((3, 3), dtype=np.int)
         self.current_player = 1
         self.game_status = GameStatus.ACTIVE
 
     def render(self, mode='human'):
-        print(self.board)
+        symbols = [' ', 'X', 'O']
+        for row in self.board:
+            print([symbols[e] for e in row])
 
     def get_available_actions(self) -> list:
         actions = list(zip(*np.where(self.board == 0)))
@@ -57,11 +63,18 @@ class TicTacToeEnv(gym.Env):
         else:
             return GameStatus.ACTIVE
 
-    def is_terminal(self) -> bool:
-        return self.game_status in [GameStatus.WON, GameStatus.DRAW]
+    def are_players_done(self) -> List[bool]:
+        done = self.game_status in [GameStatus.WON, GameStatus.DRAW]
+        return [done, done]
 
-    def get_reward(self) -> float:
+    def get_player_rewards(self) -> List[float]:
         if self.game_status is GameStatus.WON:
-            return 1
+            if self.current_player == 1:
+                return [1, -1]
+            else:
+                return [-1, 1]
         else:
-            return 0
+            return [0, 0]
+
+    def get_player_observations(self) -> List[np.ndarray]:
+        return [self.board, self.board]
