@@ -85,7 +85,7 @@ class QuartoEnv(gym.Env):
             if self._common_bit(line):
                 return GameStatus.WON
 
-        if len(self.get_available_actions()) == 0:
+        if np.all(~np.isnan(self.board)):
             return GameStatus.DRAW
 
         return GameStatus.ACTIVE

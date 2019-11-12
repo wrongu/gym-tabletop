@@ -47,6 +47,13 @@ class TestQuarto(unittest.TestCase):
         self.env.board[[3, 2, 1, 0], [0, 1, 2, 3]] = [4, 5, 12, 13]
         self.assertEqual(self.env._evaluate_game_state(), GameStatus.WON)
 
+        self.env.reset()
+        self.env.board[:] = [[15, 0, 14, 1],
+                             [4, 11, 5, 10],
+                             [13, 12, 8, 7],
+                             [3, 9, 6, 2]]
+        self.assertEqual(self.env._evaluate_game_state(), GameStatus.DRAW)
+
     def test_are_players_done(self):
         self.assertEqual(self.env.are_players_done(), [False, False])
 
