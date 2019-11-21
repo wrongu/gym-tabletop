@@ -21,9 +21,10 @@ RAYS = np.array([[0, 1],  # east
 
 class ReversiEnv(gym.Env):
     metadata = {'render.modes': ['human']}
+    game_symbols = [' ', '\u25cf', '\u25cb']
 
     def __init__(self):
-        self.board = np.nan*np.zeros((8, 8), dtype=int)
+        self.board = np.zeros((8, 8), dtype=int)
         self.board[[3, 4], [3, 4]] = 2
         self.board[[3, 4], [4, 3]] = 1
         self.n_dark = 2
@@ -32,18 +33,25 @@ class ReversiEnv(gym.Env):
         self.game_status = GameStatus.ACTIVE
         # self.action_space = spaces.Discrete(n_actions)
 
-    def step(self, action):
+    def step(self, action: tuple):
         self.board[action] = self.current_player
-        self.game_status = self._evaluate_game_state()
-
-        reward = self.get_player_rewards()
-        done = self.are_players_done()
-        obs = self.get_player_observations()
+        opp = 1 if self.current_player == 2 else 2
+        hits = self._cast_rays(action)
+        for hit in hits:
+            pos = action + RAYS[hit]
+            while self.board[tuple(pos)] == opp:
+                self.board[tuple(pos)] = self.current_player
+                pos += RAYS[hit]
 
         if self.current_player == 1:
             self.current_player = 2
         else:
             self.current_player = 1
+
+        self.game_status = self._evaluate_game_state()
+        reward = self.get_player_rewards()
+        done = self.are_players_done()
+        obs = self.get_player_observations()
 
         return obs, reward, done, {}
 
@@ -58,17 +66,15 @@ class ReversiEnv(gym.Env):
 
     def render(self, mode='human'):
         for row in self.board:
-            print(row)
+            print([self.game_symbols[e] for e in row])
 
     def get_available_actions(self):
         diff = laplace(self.board)
         diff[self.board.nonzero()] = 0
         candidate_positions = list(zip(*diff.nonzero()))
-        valid_positions = set()
-        for pos in candidate_positions:
-            valid_positions |= self._cast_rays(pos)
-
-        return list(valid_positions)
+        valid_positions = [pos for pos in candidate_positions
+                           if self._is_valid_position(pos)]
+        return valid_positions
 
     def are_players_done(self) -> List[bool]:
         if self.game_status in [GameStatus.WON, GameStatus.DRAW]:
@@ -100,20 +106,25 @@ class ReversiEnv(gym.Env):
         else:
             return GameStatus.WON
 
-    def _cast_rays(self, start):
+    def _is_valid_position(self, position) -> bool:
+        hits = self._cast_rays(position)
+        return len(hits) > 0
+
+    def _cast_rays(self, origin) -> List:
         opp = 1 if self.current_player == 2 else 2
-        hits = set()
-        for ray in RAYS:
-            pos = start + ray
+        hits = []
+        for i, ray in enumerate(RAYS):
+            pos = origin + ray
             idx = tuple(pos)
             if np.any(pos < 0) or np.any(pos >= 8) or self.board[idx] != opp:
                 continue
             pos += ray
             while np.all(pos >= 0) and np.all(pos < 8):
-                idx = tuple(pos)
-                if self.board[idx] == self.current_player:
-                    hits.add(start)
-                elif self.board[idx] == 0:
+                piece = self.board[tuple(pos)]
+                if piece == opp:
+                    pos += ray
+                else:
+                    if piece == self.current_player:
+                        hits.append(i)
                     break
-                pos += ray
         return hits
