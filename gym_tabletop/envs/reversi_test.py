@@ -1,0 +1,29 @@
+import unittest
+
+import numpy as np
+
+from gym_tabletop.envs import GameStatus
+from gym_tabletop.envs.reversi import ReversiEnv
+
+
+class TestReversiEnv(unittest.TestCase):
+    def setUp(self) -> None:
+        self.env = ReversiEnv()
+
+    def test_get_possible_actions(self):
+        self.env.reset()
+        expected = {(2, 3), (3, 2), (4, 5), (5, 4)}
+        self.assertEqual(set(self.env.get_available_actions()), expected)
+
+        self.env.current_player = 2
+        expected = {(2, 4), (3, 5), (4, 2), (5, 3)}
+        self.assertEqual(set(self.env.get_available_actions()), expected)
+
+        self.env.reset()
+        self.env.board = np.ones((8, 8))
+        self.env.board[[3, 4, 4, 5, 6], [7, 6, 7, 6, 7]] = 0
+        self.env.board[5, 7] = 2
+        self.assertEqual(self.env.get_available_actions(), [])
+
+        self.env.current_player = 2
+        self.assertEqual(self.env.get_available_actions(), [])
