@@ -3,12 +3,12 @@ import unittest
 import numpy as np
 
 from gym_tabletop.envs import GameStatus
-from gym_tabletop.envs.reversi import ReversiEnv
+from gym_tabletop.envs.othello import OthelloEnv
 
 
 class TestReversiEnv(unittest.TestCase):
     def setUp(self) -> None:
-        self.env = ReversiEnv()
+        self.env = OthelloEnv()
 
     def test_get_possible_actions(self):
         self.env.reset()

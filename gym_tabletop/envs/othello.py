@@ -19,7 +19,7 @@ RAYS = np.array([[0, 1],  # east
                  ])
 
 
-class ReversiEnv(gym.Env):
+class OthelloEnv(gym.Env):
     metadata = {'render.modes': ['human']}
     game_symbols = [' ', '\u25cf', '\u25cb']
 
