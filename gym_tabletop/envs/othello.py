@@ -3,11 +3,14 @@ from typing import List
 import gym
 from gym import spaces
 import numpy as np
-from scipy.ndimage import laplace
+from scipy.signal import convolve2d
 
 from gym_tabletop.envs import GameStatus
 
 
+LAPLACE_FILTER = [[1, 1, 1],
+                  [1, -8, 1],
+                  [1, 1, 1]]
 RAYS = np.array([[0, 1],  # east
                  [0, -1],  # west
                  [1, 0],  # south
@@ -65,11 +68,13 @@ class OthelloEnv(gym.Env):
         self.game_status = GameStatus.ACTIVE
 
     def render(self, mode='human'):
+        print_rows = ['\u250f' + '\u2501\u252f'*7 + '\u2501\u2513']
         for row in self.board:
-            print([self.game_symbols[e] for e in row])
+            print_row = ''
+            print('|'.join([self.game_symbols[e] for e in row]))
 
     def get_available_actions(self):
-        diff = laplace(self.board)
+        diff = convolve2d(self.board, LAPLACE_FILTER, 'same')
         diff[self.board.nonzero()] = 0
         candidate_positions = list(zip(*diff.nonzero()))
         valid_positions = [pos for pos in candidate_positions
