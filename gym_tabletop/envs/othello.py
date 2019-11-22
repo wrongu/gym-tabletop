@@ -68,10 +68,8 @@ class OthelloEnv(gym.Env):
         self.game_status = GameStatus.ACTIVE
 
     def render(self, mode='human'):
-        print_rows = ['\u250f' + '\u2501\u252f'*7 + '\u2501\u2513']
         for row in self.board:
-            print_row = ''
-            print('|'.join([self.game_symbols[e] for e in row]))
+            print([self.game_symbols[e] for e in row])
 
     def get_available_actions(self):
         diff = convolve2d(self.board, LAPLACE_FILTER, 'same')
