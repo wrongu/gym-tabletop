@@ -16,27 +16,24 @@ RAYS = np.array([[0, 1],  # east
                  [1, 0],  # south
                  [-1, 0],  # north
                  [1, 1],  # southeast
-                 [1 , -1],  # southwest
+                 [1, -1],  # southwest
                  [-1, 1],  # northeast
                  [-1, -1]  # northwest
                  ])
 
+PLAYER_1 = 1
+PLAYER_2 = 2
 
 class OthelloEnv(gym.Env):
     metadata = {'render.modes': ['human']}
     game_symbols = [' ', '\u25cf', '\u25cb']
 
     def __init__(self):
-        self.board = np.zeros((8, 8), dtype=int)
-        self.board[[3, 4], [3, 4]] = 2
-        self.board[[3, 4], [4, 3]] = 1
-        self.n_dark = 2
-        self.n_light = 2
-        self.current_player = 1
-        self.game_status = GameStatus.ACTIVE
+        self.reset()
         # self.action_space = spaces.Discrete(n_actions)
 
     def step(self, action: tuple):
+        # Add a stone to position 'action'
         self.board[action] = self.current_player
         opp = 1 if self.current_player == 2 else 2
         hits = self._cast_rays(action)
@@ -46,10 +43,11 @@ class OthelloEnv(gym.Env):
                 self.board[tuple(pos)] = self.current_player
                 pos += RAYS[hit]
 
-        if self.current_player == 1:
-            self.current_player = 2
+        # Switch whose turn it is
+        if self.current_player == PLAYER_1:
+            self.current_player = PLAYER_2
         else:
-            self.current_player = 1
+            self.current_player = PLAYER_1
 
         self.game_status = self._evaluate_game_state()
         reward = self.get_player_rewards()
@@ -60,11 +58,11 @@ class OthelloEnv(gym.Env):
 
     def reset(self):
         self.board = np.zeros((8, 8), dtype=int)
-        self.board[[3, 4], [3, 4]] = 2
-        self.board[[3, 4], [4, 3]] = 1
+        self.board[[3, 4], [3, 4]] = PLAYER_2
+        self.board[[3, 4], [4, 3]] = PLAYER_1
         self.n_dark = 2
         self.n_light = 2
-        self.current_player = 1
+        self.current_player = PLAYER_1
         self.game_status = GameStatus.ACTIVE
 
     def render(self, mode='human'):
@@ -98,8 +96,8 @@ class OthelloEnv(gym.Env):
         return [self.board, self.board]
 
     def _evaluate_game_state(self) -> GameStatus:
-        self.n_dark = len(np.where(self.board == 1)[0])
-        self.n_light = len(np.where(self.board == 2)[0])
+        self.n_dark = len(np.where(self.board == PLAYER_1)[0])
+        self.n_light = len(np.where(self.board == PLAYER_2)[0])
 
         if len(self.get_available_actions()) > 0:
             return GameStatus.ACTIVE
