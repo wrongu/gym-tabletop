@@ -43,6 +43,13 @@ class OthelloEnv(gym.Env):
                 self.board[tuple(pos)] = self.current_player
                 pos += RAYS[hit]
 
+        # Update candidate action positions
+        self._candidate_positions.remove(action)
+        for i in range(8):
+            x, y = action[0]+RAYS[i,0], action[1]+RAYS[i,1]
+            if 0 <= x < 8 and 0 <= y < 8 and self.board[x, y] == 0:
+                self._candidate_positions.add((x,y))
+
         # Switch whose turn it is
         if self.current_player == PLAYER_1:
             self.current_player = PLAYER_2
@@ -60,6 +67,7 @@ class OthelloEnv(gym.Env):
         self.board = np.zeros((8, 8), dtype=int)
         self.board[[3, 4], [3, 4]] = PLAYER_2
         self.board[[3, 4], [4, 3]] = PLAYER_1
+        self._compute_edge_set()
         self.n_dark = 2
         self.n_light = 2
         self.current_player = PLAYER_1
@@ -71,11 +79,13 @@ class OthelloEnv(gym.Env):
             print(" ".join(self.game_symbols[e] for e in row))
         print("================")
 
-    def get_available_actions(self):
+    def _compute_edge_set(self):
         diff = convolve2d(self.board, LAPLACE_FILTER, 'same')
         diff[self.board.nonzero()] = 0
-        candidate_positions = list(zip(*diff.nonzero()))
-        valid_positions = [pos for pos in candidate_positions
+        self._candidate_positions = set(zip(*diff.nonzero()))
+
+    def get_available_actions(self):
+        valid_positions = [pos for pos in self._candidate_positions
                            if self._is_valid_position(pos)]
         return valid_positions
 

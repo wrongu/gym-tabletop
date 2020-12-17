@@ -22,6 +22,7 @@ class TestOthelloEnv(unittest.TestCase):
         self.env.reset()
         self.env.board[[3, 3, 4], [2, 3, 3]] = 1
         self.env.board[[2, 3, 4], [4, 4, 4]] = 2
+        self.env._compute_edge_set()
         expected = {(1, 5), (2, 5), (3, 5), (4, 5), (5, 5)}
         self.assertEqual(set(self.env.get_available_actions()), expected)
 
@@ -29,6 +30,7 @@ class TestOthelloEnv(unittest.TestCase):
         self.env.board = np.ones((8, 8))
         self.env.board[[3, 4, 4, 5, 6], [7, 6, 7, 6, 7]] = 0
         self.env.board[5, 7] = 2
+        self.env._compute_edge_set()
         self.assertEqual(self.env.get_available_actions(), [])
 
         self.env.current_player = 2
