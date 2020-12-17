@@ -1,19 +1,27 @@
 from gym_tabletop.envs import GameStatus
 from gym_tabletop.envs.othello import OthelloEnv
 import random
-import numpy as np
+
+def disp_act_helper(board, acts):
+    for a in acts:
+        board.board[a] = 3
+    board.render()
+    for a in acts:
+        board.board[a] = 0
 
 def self_play():
     board = OthelloEnv()
+    i=0
     while board.game_status == GameStatus.ACTIVE:
-        acts = board.get_available_actions()
+        acts = sorted(board.get_available_actions())
+        disp_act_helper(board, acts)
         if len(acts) == 0:
             break
         board.step(acts[random.randint(0, len(acts)-1)])
-    coord_1 = np.where(board.board.flatten() == 1)[0]
-    coord_2 = np.where(board.board.flatten() == 2)[0]
-    board_hash = hash(tuple(coord_1)) ^ hash(tuple(coord_2))
-    return len(coord_1)+len(coord_2)-4, board_hash
+        print("DBGXX", i, board.hash_key())
+        i+=1
+    num_moves = len(board.board.nonzero()[0])-4
+    return num_moves, board.hash_key()
 
 if __name__ == '__main__':
     import time

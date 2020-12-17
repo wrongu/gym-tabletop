@@ -26,7 +26,7 @@ PLAYER_2 = 2
 
 class OthelloEnv(gym.Env):
     metadata = {'render.modes': ['human']}
-    game_symbols = [' ', '\u25cf', '\u25cb']
+    game_symbols = ['_', '\u25cf', '\u25cb', '\u25cd']
 
     def __init__(self):
         self.reset()
@@ -66,8 +66,10 @@ class OthelloEnv(gym.Env):
         self.game_status = GameStatus.ACTIVE
 
     def render(self, mode='human'):
+        print("======="+self.game_symbols[self.current_player]*2+"=======")
         for row in self.board:
-            print([self.game_symbols[e] for e in row])
+            print(" ".join(self.game_symbols[e] for e in row))
+        print("================")
 
     def get_available_actions(self):
         diff = convolve2d(self.board, LAPLACE_FILTER, 'same')
@@ -129,3 +131,8 @@ class OthelloEnv(gym.Env):
                         hits.append(i)
                     break
         return hits
+
+    def hash_key(self):
+        coord_1 = np.where(self.board.flatten() == 1)[0]
+        coord_2 = np.where(self.board.flatten() == 2)[0]
+        return hash(tuple(coord_1) + tuple(coord_2))
