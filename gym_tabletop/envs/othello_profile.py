@@ -9,16 +9,18 @@ def disp_act_helper(board, acts):
     for a in acts:
         board.board[a] = 0
 
-def self_play():
+def self_play(verbose=False):
     board = OthelloEnv()
     i=0
     while board.game_status == GameStatus.ACTIVE:
         acts = sorted(board.get_available_actions())
-        disp_act_helper(board, acts)
+        if verbose:
+            disp_act_helper(board, acts)
         if len(acts) == 0:
             break
         board.step(acts[random.randint(0, len(acts)-1)])
-        print("DBGXX", i, board.hash_key())
+        if verbose:
+            print("BOARD HASH", i, board.hash_key())
         i+=1
     num_moves = len(board.board.nonzero()[0])-4
     return num_moves, board.hash_key()
